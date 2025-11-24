@@ -70,7 +70,7 @@ export const exampleBulkEmail = async () => {
 export const exampleTemplatedEmail = async () => {
   const template = `
     <h1>Hello {{name}}!</h1>
-    <p>Your account balance is: ${{balance}}</p>
+    <p>Your account balance is: ${'{{balance}}'}</p>
     <p>You have {{walks}} walks remaining this month.</p>
   `;
 
@@ -81,7 +81,7 @@ export const exampleTemplatedEmail = async () => {
     {
       name: 'John Doe',
       balance: '150.00',
-      walks: '8',
+      walks: '5',
     }
   );
 };

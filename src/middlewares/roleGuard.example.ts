@@ -18,6 +18,8 @@ import {
   guardRoleAndPermission,
   guardAll,
   guardAny,
+  guardQueryOwnership,
+  guardBodyOwnership,
 } from './roleGuard.middleware';
 import { asyncHandler } from '../utils/error.util';
 import { UserRole } from '../models/User.model';

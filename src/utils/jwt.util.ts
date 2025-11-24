@@ -1,4 +1,5 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { StringValue } from 'ms';
 import { config } from '../config/env.config';
 import { UserRole } from '../models/User.model';
 
@@ -23,11 +24,13 @@ export const generateAccessToken = (payload: Omit<JWTPayload, 'type'>): string =
     type: 'access',
   };
 
-  return jwt.sign(tokenPayload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
+  const options: SignOptions = {
+    expiresIn: config.jwt.expiresIn as StringValue,
     issuer: 'silver-walks-api',
     audience: 'silver-walks-client',
-  });
+  };
+  
+  return jwt.sign(tokenPayload, config.jwt.secret, options);
 };
 
 /**
@@ -39,11 +42,13 @@ export const generateRefreshToken = (payload: Omit<JWTPayload, 'type'>): string 
     type: 'refresh',
   };
 
-  return jwt.sign(tokenPayload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiresIn,
+  const options: SignOptions = {
+    expiresIn: config.jwt.refreshExpiresIn as StringValue,
     issuer: 'silver-walks-api',
     audience: 'silver-walks-client',
-  });
+  };
+  
+  return jwt.sign(tokenPayload, config.jwt.refreshSecret, options);
 };
 
 /**
