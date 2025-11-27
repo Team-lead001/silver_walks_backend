@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import authRoutes from '../modules/auth/auth.routes';
 
 const router = Router();
 
@@ -10,10 +11,9 @@ router.get('/health', (req, res) => {
   });
 });
 
-// TODO: Import and mount module routes here
-// Example:
-// import authRoutes from '../modules/auth/auth.routes';
-// router.use('/auth', authRoutes);
+
+
+router.use('/auth', authRoutes);
 
 export default router;
 

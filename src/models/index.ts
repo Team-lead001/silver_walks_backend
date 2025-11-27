@@ -321,7 +321,7 @@ ActivityTracker.belongsTo(User, {
 
 User.hasMany(ActivityTracker, {
   foreignKey: 'user_id',
-  as: 'activityLogs',
+  as: 'activityTrackers',
 });
 
 export {

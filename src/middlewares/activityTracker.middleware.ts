@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import ActivityTracker, { ActivityAction, ActivityStatus } from '../models/ActivityTracker.model';
 import { UserRole } from '../models/User.model';
-import { logger } from '../utils/logger.util';
-import '../types/express.d'; // Ensure extended Request type is available
 
+import { logger } from '../utils/logger.util';
 /**
  * Configuration for activity tracking
  */

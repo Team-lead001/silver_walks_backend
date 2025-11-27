@@ -38,6 +38,7 @@ router.post(
   authenticate,
   asyncHandler(async (req: Request, res: Response) => {
     // ... create walk logic ...
+    const walkId = 'walk-123'; // Example walk ID
 
     // Send notification to user
     await createNotification({
@@ -158,7 +159,7 @@ router.post(
   '/schedule-walk',
   authenticate,
   asyncHandler(async (req: Request, res: Response) => {
-    const { userId, date, time } = req.body;
+    const { userId, date, time, walkId } = req.body;
 
     // Use pre-built helper
     await notifyWalkReminder(
