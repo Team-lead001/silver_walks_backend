@@ -1,0 +1,165 @@
+import Joi from 'joi';
+import { Request, Response, NextFunction } from 'express';
+import { validationErrorResponse } from '../../utils/response.util';
+
+/**
+ * Schema for elderly user registration
+ */
+export const registerElderlySchema = Joi.object({
+  // Step 1: Personal Information
+  fullName: Joi.string()
+    .trim()
+    .min(2)
+    .max(100)
+    .required()
+    .messages({
+      'string.empty': 'Full name is required',
+      'string.min': 'Full name must be at least 2 characters',
+      'string.max': 'Full name must not exceed 100 characters',
+      'any.required': 'Full name is required',
+    }),
+
+  age: Joi.number()
+    .integer()
+    .min(50)
+    .max(120)
+    .required()
+    .messages({
+      'number.base': 'Age must be a number',
+      'number.min': 'Age must be at least 50',
+      'number.max': 'Age must not exceed 120',
+      'any.required': 'Age is required',
+    }),
+
+  phone: Joi.string()
+    .trim()
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .required()
+    .messages({
+      'string.empty': 'Phone number is required',
+      'string.pattern.base': 'Invalid phone number format. Use international format (e.g., +1234567890)',
+      'any.required': 'Phone number is required',
+    }),
+
+  email: Joi.string()
+    .trim()
+    .email()
+    .optional()
+    .allow('')
+    .messages({
+      'string.email': 'Invalid email format',
+    }),
+
+  homeAddress: Joi.string()
+    .trim()
+    .min(10)
+    .max(500)
+    .required()
+    .messages({
+      'string.empty': 'Home address is required',
+      'string.min': 'Home address must be at least 10 characters',
+      'string.max': 'Home address must not exceed 500 characters',
+      'any.required': 'Home address is required',
+    }),
+
+  gender: Joi.string()
+    .trim()
+    .valid('male', 'female', 'other')
+    .required()
+    .messages({
+      'string.empty': 'Gender is required',
+      'any.only': 'Gender must be male, female, or other',
+      'any.required': 'Gender is required',
+    }),
+
+  // Step 2: Emergency Contact
+  emergencyContactName: Joi.string()
+    .trim()
+    .min(2)
+    .max(100)
+    .required()
+    .messages({
+      'string.empty': 'Emergency contact name is required',
+      'string.min': 'Emergency contact name must be at least 2 characters',
+      'string.max': 'Emergency contact name must not exceed 100 characters',
+      'any.required': 'Emergency contact name is required',
+    }),
+
+  emergencyContactRelationship: Joi.string()
+    .trim()
+    .min(2)
+    .max(50)
+    .required()
+    .messages({
+      'string.empty': 'Relationship is required',
+      'string.min': 'Relationship must be at least 2 characters',
+      'string.max': 'Relationship must not exceed 50 characters',
+      'any.required': 'Relationship is required',
+    }),
+
+  emergencyContactPhone: Joi.string()
+    .trim()
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .required()
+    .messages({
+      'string.empty': 'Emergency contact phone is required',
+      'string.pattern.base': 'Invalid emergency contact phone format',
+      'any.required': 'Emergency contact phone is required',
+    }),
+
+  // Step 3: Health Information (Optional)
+  healthConditions: Joi.array()
+    .items(Joi.string().trim().max(200))
+    .max(20)
+    .optional()
+    .messages({
+      'array.max': 'Maximum 20 health conditions allowed',
+      'string.max': 'Each health condition must not exceed 200 characters',
+    }),
+
+  currentMedications: Joi.array()
+    .items(Joi.string().trim().max(200))
+    .max(30)
+    .optional()
+    .messages({
+      'array.max': 'Maximum 30 medications allowed',
+      'string.max': 'Each medication must not exceed 200 characters',
+    }),
+
+  specialNeeds: Joi.string()
+    .trim()
+    .max(1000)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Special needs must not exceed 1000 characters',
+    }),
+});
+
+/**
+ * Middleware to validate elderly registration data
+ */
+export const validateElderlyRegistration = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { error, value } = registerElderlySchema.validate(req.body, {
+    abortEarly: false, // Return all errors, not just the first one
+    stripUnknown: true, // Remove unknown fields
+  });
+
+  if (error) {
+    const errors = error.details.map((detail: Joi.ValidationErrorItem) => ({
+      field: detail.path.join('.'),
+      message: detail.message,
+    }));
+
+    validationErrorResponse(res, errors, 'Validation failed');
+    return;
+  }
+
+  // Replace req.body with validated and sanitized data
+  req.body = value;
+  next();
+};

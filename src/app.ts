@@ -6,8 +6,12 @@ import { config } from './config/env.config';
 import { requestLogger } from './middlewares/logger.middleware';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import { apiRateLimiter } from './middlewares/rateLimit.middleware';
-import { connectDatabase } from './config/database.config';
+import { responseInterceptor } from './middlewares/responseInterceptor.middleware';
+import { connectDatabase, migrateDatabase } from './config/database.config';
 import { logger } from './utils/logger.util';
+
+// Import models to ensure they're registered before sync
+import './models/index';
 
 // Import routes
 import routes from './routes/index';
@@ -42,17 +46,13 @@ export const createApp = async (): Promise<Application> => {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+  // Response interceptor (format all JSON responses)
+  app.use(responseInterceptor);
+
   // Request logging
   app.use(requestLogger);
 
-  // Health check endpoint (before rate limiting)
-  app.get('/health', (req, res) => {
-    res.status(200).json({
-      success: true,
-      message: 'Server is healthy',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  
 
   // API rate limiting
   app.use('/api', apiRateLimiter);
@@ -80,6 +80,11 @@ export const initializeApp = async (): Promise<void> => {
   try {
     // Connect to database
     await connectDatabase();
+    
+    // Run database migrations (create tables if they don't exist)
+    // Migrations will automatically run on startup and skip already executed ones
+    await migrateDatabase();
+    
     logger.info('Application initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize application', error as Error);

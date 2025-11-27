@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import { config } from './env.config';
 import { logger } from '../utils/logger.util';
+import { runMigrations } from '../migrations';
 
 // Create Sequelize instance
 // Support both DATABASE_URL (for Neon DB) and individual connection parameters
@@ -70,7 +71,17 @@ export const connectDatabase = async (): Promise<void> => {
   }
 };
 
-// Sync database models
+// Run database migrations
+export const migrateDatabase = async (): Promise<void> => {
+  try {
+    await runMigrations(sequelize);
+  } catch (error) {
+    logger.error('Database migration failed', error as Error);
+    throw error;
+  }
+};
+
+// Sync database models (deprecated in favor of migrations)
 export const syncDatabase = async (force: boolean = false): Promise<void> => {
   try {
     await sequelize.sync({ force, alter: !force && config.env === 'development' });

@@ -1,12 +1,9 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import { sequelize } from '../config/database.config';
 import ElderlyProfile from './ElderlyProfile.model';
+import { MobilityLevel } from '../types/mobility.types';
 
-export enum MobilityLevel {
-  INDEPENDENT = 'independent',
-  ASSISTED = 'assisted',
-  WHEELCHAIR = 'wheelchair'
-}
+
 
 interface HealthProfileAttributes {
   id: string;

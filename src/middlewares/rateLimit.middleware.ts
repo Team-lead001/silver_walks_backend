@@ -1,10 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
+
 import { config } from '../config/env.config';
 import { ErrorCode } from '../utils/error.util';
 
 /**
- * Create rate limiter instance
+ * Generate rate limiter instance
+ * PER ENDPOINT – NO IP USED
  */
 const createRateLimiter = (
   windowMs: number,
@@ -21,9 +23,10 @@ const createRateLimiter = (
         message: 'Too many requests, please try again later.',
       },
     },
-    standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-    legacyHeaders: false, // Disable `X-RateLimit-*` headers
-    handler: (req: Request, res: Response) => {
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    handler: (_req: Request, res: Response) => {
       res.status(429).json({
         success: false,
         error: {
@@ -32,75 +35,53 @@ const createRateLimiter = (
         },
       });
     },
-    // Use IP address as key
-    keyGenerator: (req: Request) => {
-      return req.ip || req.socket.remoteAddress || 'unknown';
-    },
+
+    /** 👇 KEY: ENDPOINT ONLY (NOT IP) */
+    keyGenerator: (req: Request): string => req.originalUrl,
   });
 };
 
-/**
- * General API rate limiter (from config)
- */
+/** General API rate limiter */
 export const apiRateLimiter = createRateLimiter(
   config.rateLimit.windowMs,
   config.rateLimit.maxRequests,
-  'Too many requests from this IP, please try again later.'
+  'Too many requests to this endpoint, try again later.'
 );
 
-/**
- * Strict rate limiter for authentication endpoints
- */
+/** Strict auth limiter */
 export const authRateLimiter = createRateLimiter(
-  15 * 60 * 1000, // 15 minutes
-  5, // 5 requests per window
+  15 * 60 * 1000, // 15 mins
+  5,
   'Too many authentication attempts, please try again later.'
 );
 
-/**
- * Rate limiter for password reset
- */
+/** Password reset limiter */
 export const passwordResetRateLimiter = createRateLimiter(
   60 * 60 * 1000, // 1 hour
-  3, // 3 requests per hour
+  3,
   'Too many password reset attempts, please try again later.'
 );
 
-/**
- * Rate limiter for email verification
- */
+/** Email verification limiter */
 export const emailVerificationRateLimiter = createRateLimiter(
-  15 * 60 * 1000, // 15 minutes
-  3, // 3 requests per 15 minutes
-  'Too many email verification requests, please try again later.'
+  15 * 60 * 1000,
+  3,
+  'Too many email verification attempts, please try again later.'
 );
 
-/**
- * Rate limiter for file uploads
- */
+/** File upload limiter */
 export const uploadRateLimiter = createRateLimiter(
-  60 * 60 * 1000, // 1 hour
-  20, // 20 uploads per hour
+  60 * 60 * 1000,
+  20,
   'Too many file uploads, please try again later.'
 );
 
-/**
- * Rate limiter for sensitive operations (payments, withdrawals)
- */
+/** Sensitive operations limiter (payments, withdrawals) */
 export const sensitiveOperationRateLimiter = createRateLimiter(
-  60 * 60 * 1000, // 1 hour
-  10, // 10 operations per hour
-  'Too many sensitive operations, please try again later.'
+  60 * 60 * 1000,
+  10,
+  'Too many sensitive actions, please try again later.'
 );
 
-/**
- * Custom rate limiter factory
- */
-export const createCustomRateLimiter = (
-  windowMs: number,
-  maxRequests: number,
-  message?: string
-): RateLimitRequestHandler => {
-  return createRateLimiter(windowMs, maxRequests, message);
-};
-
+/** Custom rate limiter factory */
+export const createCustomRateLimiter = createRateLimiter;

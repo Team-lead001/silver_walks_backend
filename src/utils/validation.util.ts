@@ -19,62 +19,76 @@ export const validators = {
     return true;
   },
 
-  email: (value: string): boolean => {
+  email: (value?: string): boolean => {
+    if (value === undefined || value === null || value === '') return true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value);
   },
 
-  minLength: (min: number) => (value: string): boolean => {
+  minLength: (min: number) => (value?: string): boolean => {
+    if (value === undefined || value === null) return true;
     return value.length >= min;
   },
 
-  maxLength: (max: number) => (value: string): boolean => {
+  maxLength: (max: number) => (value?: string): boolean => {
+    if (value === undefined || value === null) return true;
     return value.length <= max;
   },
 
-  min: (min: number) => (value: number): boolean => {
+  min: (min: number) => (value?: number): boolean => {
+    if (value === undefined || value === null) return true;
     return value >= min;
   },
 
-  max: (max: number) => (value: number): boolean => {
+  max: (max: number) => (value?: number): boolean => {
+    if (value === undefined || value === null) return true;
     return value <= max;
   },
 
   isNumber: (value: any): boolean => {
+    if (value === undefined || value === null || value === '') return true;
     return !isNaN(Number(value));
   },
 
   isInteger: (value: any): boolean => {
+    if (value === undefined || value === null || value === '') return true;
     return Number.isInteger(Number(value));
   },
 
-  isPositive: (value: number): boolean => {
+  isPositive: (value?: number): boolean => {
+    if (value === undefined || value === null) return true;
     return value > 0;
   },
 
-  isNonNegative: (value: number): boolean => {
+  isNonNegative: (value?: number): boolean => {
+    if (value === undefined || value === null) return true;
     return value >= 0;
   },
 
-  isUUID: (value: string): boolean => {
+  isUUID: (value?: string): boolean => {
+    if (value === undefined || value === null || value === '') return true;
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(value);
   },
 
   isEnum: (enumObject: any) => (value: any): boolean => {
+    if (value === undefined || value === null) return true;
     return Object.values(enumObject).includes(value);
   },
 
   isDate: (value: any): boolean => {
+    if (value === undefined || value === null) return true;
     return value instanceof Date && !isNaN(value.getTime());
   },
 
-  isPhone: (value: string): boolean => {
+  isPhone: (value?: string): boolean => {
+    if (value === undefined || value === null || value === '') return true;
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
     return phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''));
   },
 
-  isUrl: (value: string): boolean => {
+  isUrl: (value?: string): boolean => {
+    if (value === undefined || value === null || value === '') return true;
     try {
       new URL(value);
       return true;

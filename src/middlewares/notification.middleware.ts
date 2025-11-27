@@ -6,7 +6,7 @@ import {
 } from '../services/notification.service';
 import { NotificationType, NotificationPriority } from '../models/Notification.model';
 import { logger } from '../utils/logger.util';
-import '../types/express.d'; // Ensure extended Request type is available
+
 
 /**
  * Configuration for notification middleware

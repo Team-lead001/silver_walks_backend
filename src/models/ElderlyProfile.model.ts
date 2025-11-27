@@ -3,18 +3,8 @@ import { sequelize } from '../config/database.config';
 import User from './User.model';
 import NurseProfile from './NurseProfile.model';
 import HealthProfile from './HealthProfile.model';
+import { SubscriptionPlan, SubscriptionStatus } from '../types/subscription.types';
 
-export enum SubscriptionPlan {
-  BASIC = 'basic',
-  STANDARD = 'standard',
-  PREMIUM = 'premium'
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  EXPIRED = 'expired'
-}
 
 interface ElderlyProfileAttributes {
   id: string;
