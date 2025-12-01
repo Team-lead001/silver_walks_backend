@@ -106,9 +106,10 @@ export const paginatedResponse = <T = any>(
 export const createdResponse = <T = any>(
   res: Response,
   data?: T,
-  message?: string
+  message?: string,
+  statusCode: number = 201
 ): Response => {
-  return successResponse(res, data, message || 'Resource created successfully', 201);
+  return successResponse(res, data, message || 'Resource created successfully', statusCode);
 };
 
 /**

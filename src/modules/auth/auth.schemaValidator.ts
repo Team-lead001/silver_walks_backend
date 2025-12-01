@@ -61,23 +61,6 @@ export const registerElderlySchema = Joi.object({
     .messages({
       'string.email': 'Invalid email format',
     }),
-  password: Joi.string()
-    .custom(sanitize, 'sanitize input')
-    .min(8)
-    .max(128)
-    .trim()
-    .pattern(/(?=.*[a-z])/, 'lowercase')
-    .pattern(/(?=.*[A-Z])/, 'uppercase')
-    .pattern(/(?=.*\d)/, 'number')
-    .pattern(/(?=.*[^\w\s])/, 'special')
-    .messages({
-      'string.empty': 'Password is required',
-      'string.min': 'Password must be at least 8 characters long',
-      'string.max': 'Password must not exceed 128 characters',
-      'string.pattern.name':
-        'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character',
-    })
-    .required(),
   homeAddress: Joi.string()
     .trim()
     .min(10)

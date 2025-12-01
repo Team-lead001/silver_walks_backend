@@ -51,7 +51,7 @@ export const loginElderlyUser = async (req: Request, res: Response, next: NextFu
   const { identifier, password } = req.body;
   try {
     const result = await authService.loginElderlyUser(identifier, password);
-    return createdResponse(res, result, 'Elderly user logged in successfully.');
+    return createdResponse(res, result, 'Elderly user logged in successfully.',200);
   } catch (error) {
     return next(error);
   }

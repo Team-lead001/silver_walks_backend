@@ -6,8 +6,8 @@ import { sequelize } from "../../config/database.config";
 import { SubscriptionStatus, SubscriptionPlan } from "../../types/subscription.types";
 import { MobilityLevel } from "../../types/mobility.types";
 import { logger } from "../../utils/logger.util";
-import { hashPassword, comparePassword, generateRandomToken } from "../../utils/encryption.util";
-
+import { comparePassword, hashPassword } from "../../utils/encryption.util";
+// import crypto from "crypto";
 
 // 🧾 DTO Type
 interface RegisterElderlyUserData {
@@ -24,6 +24,11 @@ interface RegisterElderlyUserData {
   currentMedications?: string[];
   specialNeeds?: string;
   gender: string;
+}
+
+interface CheckElderlyRecords {
+  identifier: string; // email or phone
+  password: string;
 }
 
 // 🔁 Return Type (Explicit)
@@ -49,7 +54,6 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
     age,
     phone,
     email,
-    password,
     homeAddress,
     emergencyContactName,
     emergencyContactRelationship,
@@ -60,14 +64,14 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
     gender,
   } = data;
 
-  // 1️⃣ Create User
-  // const temporaryPassword = generateRandomToken(4).slice(0, 8); 
-  const hashedPassword = await hashPassword(password)
-  
+  // Generate temporary password and hash it
+  const tempPassword =  "SilverWalks123#"; //crypto.randomBytes(8).toString('hex'); // Generate random temp password
+  const hashedPassword = await hashPassword(tempPassword);
+  // 1️⃣ User Record
   const user = await User.create(
     {
       email: email || generateFallbackEmail(phone),
-      password_hash: hashedPassword, // 🔒 TODO: change via onboarding token
+      password_hash: hashedPassword,
       role: UserRole.ELDERLY,
       is_active: true,
     },
@@ -132,6 +136,56 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
   return { user, elderlyProfile };
 };
 
+/** 🧪 Separated DB logic for login (testable) */
+const checkElderlyRecordsExist = async (data: CheckElderlyRecords) => {
+  const { identifier, password } = data;
+
+  let user = await User.findOne({
+    where: { email: identifier },
+  });
+
+  let elderlyProfile = null;
+
+  // If not found by email, try phone lookup
+  if (!user) {
+    elderlyProfile = await ElderlyProfile.findOne({
+      where: { phone: identifier },
+      include: [{ model: User, as: "user" }],
+    });
+
+    if (!elderlyProfile || !elderlyProfile.user_id) {
+      throw new Error("Invalid credentials");
+    }
+
+    user = await User.findOne({ where: { id: elderlyProfile.user_id } });
+  }
+
+  // If somehow user still doesn't exist
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
+
+  // 2️⃣ Validate password using bcrypt
+  const isValidPassword = await comparePassword(password, user.password_hash);
+
+  if (!isValidPassword) {
+    throw new Error("Invalid credentials");
+  }
+
+  // 3️⃣ Fetch elderly profile if not found earlier
+  if (!elderlyProfile) {
+    elderlyProfile = await ElderlyProfile.findOne({
+      where: { user_id: user.id },
+    });
+
+    if (!elderlyProfile) {
+      throw new Error("Elderly profile not found");
+    }
+  }
+
+  return { user, elderlyProfile };
+}
+
 /**
  * 🚀 PUBLIC SERVICE - REGISTER ELDERLY USER
  */
@@ -147,8 +201,7 @@ export const registerElderlyUser = async (
       return {
         userId: user.id,
         elderlyProfileId: elderlyProfile.id,
-        email: user.email,
-        password: user.password_hash,
+        email: user.email
       };
     });
 
@@ -162,8 +215,6 @@ export const registerElderlyUser = async (
 
 /**
  * 🚀 LOGIN ELDERLY USER
- * Accepts either email or phone
- * Returns: { userId, elderlyProfileId, email }
  */
 export const loginElderlyUser = async (
   identifier: string, // email OR phone
@@ -172,48 +223,7 @@ export const loginElderlyUser = async (
   logger.info("Attempting elderly user login", { identifier });
 
   try {
-    let user = await User.findOne({
-      where: { email: identifier },
-    });
-
-    let elderlyProfile = null;
-
-    // If not found by email, try phone lookup
-    if (!user) {
-      elderlyProfile = await ElderlyProfile.findOne({
-        where: { phone: identifier },
-        include: [{ model: User, as: "user" }],
-      });
-
-      if (!elderlyProfile || !elderlyProfile.user_id) {
-        throw new Error("Invalid credentials");
-      }
-
-      user = await User.findOne({ where: { id: elderlyProfile.user_id } });
-    }
-
-    // If somehow user still doesn't exist
-    if (!user) {
-      throw new Error("Invalid credentials");
-    }
-
-    // 2️⃣ Validate password using bcrypt
-    const isValidPassword = await comparePassword(password, user.password_hash);
-
-    if (!isValidPassword) {
-      throw new Error("Invalid credentials");
-    }
-
-    // 3️⃣ Fetch elderly profile if not found earlier
-    if (!elderlyProfile) {
-      elderlyProfile = await ElderlyProfile.findOne({
-        where: { user_id: user.id },
-      });
-
-      if (!elderlyProfile) {
-        throw new Error("Elderly profile not found");
-      }
-    }
+    const { user, elderlyProfile } = await checkElderlyRecordsExist({ identifier, password });
 
     logger.info("Elderly login successful", { userId: user.id });
 
