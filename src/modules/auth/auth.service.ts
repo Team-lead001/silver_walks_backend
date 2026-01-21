@@ -7,15 +7,15 @@ import { SubscriptionStatus, SubscriptionPlan } from "../../types/subscription.t
 import { MobilityLevel } from "../../types/mobility.types";
 import { logger } from "../../utils/logger.util";
 import { comparePassword, hashPassword } from "../../utils/encryption.util";
-// import crypto from "crypto";
+import { sendElderlyWelcomeEmail } from "../../utils/emailHelpers.util";
 
-// 🧾 DTO Type
+
+//  DTO Type
 interface RegisterElderlyUserData {
   fullName: string;
   age: number;
   phone: string;
   email?: string;
-  password: string;
   homeAddress: string;
   emergencyContactName: string;
   emergencyContactRelationship: string;
@@ -31,23 +31,23 @@ interface CheckElderlyRecords {
   password: string;
 }
 
-// 🔁 Return Type (Explicit)
+//  Return Type (Explicit)
 interface RegisterElderlyResult {
   userId: string;
   elderlyProfileId: string;
   email: string;
 }
 
-/** 🔧 Helper: Generate fallback email */
+/**  Helper: Generate fallback email */
 const generateFallbackEmail = (phone: string) => `elderly_${phone}@silverwalks.com`;
 
-/** 🔧 Helper: Calculate approximate DOB */
+/** Helper: Calculate approximate DOB */
 const calculateDOB = (age: number) => {
   const year = new Date().getFullYear() - age;
   return new Date(year, 0, 1); // January 1st
 };
 
-/** 🧪 Separated DB logic (testable) */
+/**  Separated DB logic  */
 const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
   const {
     fullName,
@@ -67,7 +67,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
   // Generate temporary password and hash it
   const tempPassword =  "SilverWalks123#"; //crypto.randomBytes(8).toString('hex'); // Generate random temp password
   const hashedPassword = await hashPassword(tempPassword);
-  // 1️⃣ User Record
+  //  User Record
   const user = await User.create(
     {
       email: email || generateFallbackEmail(phone),
@@ -78,7 +78,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
     { transaction: t }
   );
 
-  // 2️⃣ Elderly Profile
+  //  Elderly Profile
   const elderlyProfile = await ElderlyProfile.create(
     {
       user_id: user.id,
@@ -95,7 +95,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
     { transaction: t }
   );
 
-  // 3️⃣ Emergency Contact
+  //  Emergency Contact
   await EmergencyContact.create(
     {
       elderly_id: elderlyProfile.id,
@@ -108,7 +108,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
     { transaction: t }
   );
 
-  // 4️⃣ Health Profile
+  //  Health Profile
   await HealthProfile.create(
     {
       elderly_id: elderlyProfile.id,
@@ -136,7 +136,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
   return { user, elderlyProfile };
 };
 
-/** 🧪 Separated DB logic for login (testable) */
+/**  Separated DB logic for login  */
 const checkElderlyRecordsExist = async (data: CheckElderlyRecords) => {
   const { identifier, password } = data;
 
@@ -187,7 +187,7 @@ const checkElderlyRecordsExist = async (data: CheckElderlyRecords) => {
 }
 
 /**
- * 🚀 PUBLIC SERVICE - REGISTER ELDERLY USER
+ *  PUBLIC SERVICE - REGISTER ELDERLY USER
  */
 export const registerElderlyUser = async (
   data: RegisterElderlyUserData
@@ -206,6 +206,19 @@ export const registerElderlyUser = async (
     });
 
     logger.info("Elderly user registration completed successfully", { userId: result.userId });
+    
+    // Send welcome email (non-blocking)
+    const tempPassword = "SilverWalks123#";
+    sendElderlyWelcomeEmail(
+      result.email,
+      data.fullName,
+      tempPassword,
+      process.env.CLIENT_URL || 'http://localhost:3000/login'
+    ).catch((error: Error) => {
+      logger.error('Failed to send welcome email', error);
+      // Don't throw - email failure shouldn't fail registration
+    });
+    
     return result;
   } catch (error) {
     logger.error("Error registering elderly user", error as Error);
@@ -214,7 +227,7 @@ export const registerElderlyUser = async (
 };
 
 /**
- * 🚀 LOGIN ELDERLY USER
+ *  LOGIN ELDERLY USER
  */
 export const loginElderlyUser = async (
   identifier: string, // email OR phone

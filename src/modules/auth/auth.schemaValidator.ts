@@ -61,6 +61,7 @@ export const registerElderlySchema = Joi.object({
     .messages({
       'string.email': 'Invalid email format',
     }),
+
   homeAddress: Joi.string()
     .trim()
     .min(10)
