@@ -4,7 +4,8 @@ import {
     registerElderlyUser,
     verifyEmail,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    registerNurse
 } from './auth.controller';
 import {
     authRateLimiter,
@@ -16,13 +17,15 @@ import {
     validateElderlyRegistration,
     validateElderlyLogin,
     validateForgotPassword,
-    validateResetPassword
+    validateResetPassword,
+    validateNurseRegistration
 } from './auth.schemaValidator';
 
 const auth = Router();
 
 // Elderly registration route
 auth.post('/register-elderly', authRateLimiter, validateElderlyRegistration, registerElderlyUser);
+auth.post('/register-nurse', authRateLimiter, validateNurseRegistration, registerNurse);
 auth.post('/login-elderly', authRateLimiter, validateElderlyLogin, loginElderlyUser);
 
 // Email Verification

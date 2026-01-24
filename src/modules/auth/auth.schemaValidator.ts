@@ -367,3 +367,55 @@ export const validateResetPassword = (
   req.body = value;
   next();
 };
+
+/**
+ * Schema for nurse registration
+ */
+export const registerNurseSchema = Joi.object({
+  fullName: Joi.string().trim().min(2).max(100).required(),
+  email: Joi.string().trim().email().required(),
+  phone: Joi.string().trim().pattern(/^\+?[1-9]\d{1,14}$/).required(),
+  gender: Joi.string().trim().valid('male', 'female', 'other').required(),
+  yearsOfExperience: Joi.number().integer().min(0).max(50).required(),
+  maxPatientsPerDay: Joi.number().integer().min(1).max(20).required(),
+  address: Joi.string().trim().min(5).max(500).required(),
+  specializations: Joi.array().items(Joi.string().trim()).min(1).required(),
+  certifications: Joi.array().items(Joi.object({
+    name: Joi.string().trim().required(),
+    issuer: Joi.string().trim().required(),
+    issueDate: Joi.date().iso().required(),
+    expiryDate: Joi.date().iso().allow(null).optional()
+  })).min(1).required(),
+  availableTimeSlots: Joi.array().items(Joi.object({
+    dayOfWeek: Joi.number().integer().min(0).max(6).required(),
+    startTime: Joi.string().pattern(/^([01]\d|2[0-3]):?([0-5]\d)$/).required(),
+    endTime: Joi.string().pattern(/^([01]\d|2[0-3]):?([0-5]\d)$/).required()
+  })).min(1).required()
+});
+
+/**
+ * Middleware to validate nurse registration data
+ */
+export const validateNurseRegistration = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { error, value } = registerNurseSchema.validate(req.body, {
+    abortEarly: false,
+    stripUnknown: true,
+  });
+
+  if (error) {
+    const errors = error.details.map((detail: Joi.ValidationErrorItem) => ({
+      field: detail.path.join('.'),
+      message: detail.message,
+    }));
+
+    validationErrorResponse(res, errors, 'Validation failed');
+    return;
+  }
+
+  req.body = value;
+  next();
+};

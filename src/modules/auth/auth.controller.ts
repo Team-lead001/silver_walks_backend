@@ -96,3 +96,16 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     return next(error);
   }
 };
+
+/**
+ * Register Nurse User
+ */
+export const registerNurse = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("Registering nurse:", req.body);
+  try {
+    const result = await authService.registerNurse(req.body);
+    return createdResponse(res, result, 'Nurse registered successfully. Please check your email for verification.');
+  } catch (error) {
+    return next(error);
+  }
+};

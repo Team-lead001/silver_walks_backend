@@ -1,4 +1,4 @@
-import { UserRole } from "../../models/User.model";
+import { UserRole, UserStatus } from "../../models/User.model";
 import { sequelize } from "../../config/database.config";
 import { SubscriptionStatus, SubscriptionPlan } from "../../types/subscription.types";
 import { MobilityLevel } from "../../types/mobility.types";
@@ -8,6 +8,7 @@ import { sendElderlyWelcomeEmail } from "../../utils/emailHelpers.util";
 import { otpService } from "../../services/otp.service";
 import { OtpPurpose } from "../../models/Otp.model";
 import { authRepository } from "./auth.repository";
+import { generateTokenPair } from "../../utils/jwt.util";
 
 
 //  DTO Type
@@ -26,6 +27,28 @@ interface RegisterElderlyUserData {
   gender: string;
 }
 
+interface RegisterNurseData {
+  fullName: string;
+  email: string;
+  phone: string;
+  gender: string;
+  yearsOfExperience: number;
+  maxPatientsPerDay: number;
+  address: string;
+  certifications: {
+    name: string;
+    issuer: string;
+    issueDate: string;
+    expiryDate: string | null;
+  }[];
+  specializations: string[];
+  availableTimeSlots: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }[];
+}
+
 interface CheckElderlyRecords {
   identifier: string; // email or phone
   password: string;
@@ -36,6 +59,21 @@ interface RegisterElderlyResult {
   userId: string;
   elderlyProfileId: string;
   email: string;
+}
+
+interface RegisterNurseResult {
+  userId: string;
+  nurseProfileId: string;
+  email: string;
+}
+
+interface LoginElderlyResult {
+  userId: string;
+  elderlyProfileId: string;
+  email: string;
+  role: UserRole;
+  accessToken: string;
+  refreshToken: string;
 }
 
 /**  Helper: Generate fallback email */
@@ -73,6 +111,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
       email: email || generateFallbackEmail(phone),
       password_hash: hashedPassword,
       role: UserRole.ELDERLY,
+      status: UserStatus.ACTIVE,
       is_active: true,
     },
     t
@@ -223,11 +262,18 @@ export const registerElderlyUser = async (
 export const loginElderlyUser = async (
   identifier: string, // email OR phone
   password: string
-): Promise<RegisterElderlyResult> => {
+): Promise<LoginElderlyResult> => {
   logger.info("Attempting elderly user login", { identifier });
 
   try {
     const { user, elderlyProfile } = await checkElderlyRecordsExist({ identifier, password });
+
+    // Generate JWT tokens
+    const tokens = generateTokenPair({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
 
     logger.info("Elderly login successful", { userId: user.id });
 
@@ -235,6 +281,9 @@ export const loginElderlyUser = async (
       userId: user.id,
       elderlyProfileId: elderlyProfile.id,
       email: user.email,
+      role: user.role,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
 
   } catch (error) {
@@ -363,6 +412,94 @@ export const completePasswordReset = async (
 
   } catch (error) {
     logger.error("Error completing password reset", error as Error);
+    throw error;
+  }
+};
+
+/**
+ *  PUBLIC SERVICE - REGISTER NURSE
+ */
+export const registerNurse = async (
+  data: RegisterNurseData
+): Promise<RegisterNurseResult> => {
+  logger.info("Starting nurse registration", { email: data.email });
+
+  try {
+    const result = await sequelize.transaction(async (t) => {
+      // 1. Create User
+      const hashedPassword = await hashPassword("SilverWalks123#"); // Default password for now
+      const user = await authRepository.createUser(
+        {
+          email: data.email,
+          password_hash: hashedPassword,
+          role: UserRole.NURSE,
+          status: UserStatus.PENDING,
+          is_active: true,
+        },
+        t
+      );
+
+      // 2. Create Nurse Profile
+      const nurseProfile = await authRepository.createNurseProfile(
+        {
+          user_id: user.id,
+          name: data.fullName,
+          phone: data.phone,
+          gender: data.gender,
+          experience_years: data.yearsOfExperience,
+          max_patients_per_day: data.maxPatientsPerDay,
+          address: data.address,
+          specializations: data.specializations,
+          certifications: [], // This is the old JSONB field, we might still want to keep it or leave empty
+        },
+        t
+      );
+
+      // 3. Create Certifications
+      for (const cert of data.certifications) {
+        await authRepository.createNurseCertification(
+          {
+            nurse_profile_id: nurseProfile.id,
+            name: cert.name,
+            issuer: cert.issuer,
+            issue_date: new Date(cert.issueDate),
+            expiry_date: cert.expiryDate ? new Date(cert.expiryDate) : undefined,
+          },
+          t
+        );
+      }
+
+      // 4. Create Availability
+      for (const slot of data.availableTimeSlots) {
+        await authRepository.createNurseAvailability(
+          {
+            nurse_id: nurseProfile.id,
+            day_of_week: slot.dayOfWeek,
+            start_time: slot.startTime,
+            end_time: slot.endTime,
+          },
+          t
+        );
+      }
+
+      return {
+        userId: user.id,
+        nurseProfileId: nurseProfile.id,
+        email: user.email,
+      };
+    });
+
+    logger.info("Nurse registration completed successfully", { userId: result.userId });
+
+    // Send verification OTP (non-blocking)
+    otpService.createAndSendOtp(result.email, OtpPurpose.EMAIL_VERIFICATION)
+      .catch((error: Error) => {
+        logger.error('Failed to send verification OTP to nurse', error as Error);
+      });
+
+    return result;
+  } catch (error) {
+    logger.error("Error registering nurse", error as Error);
     throw error;
   }
 };

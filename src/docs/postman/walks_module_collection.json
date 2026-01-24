@@ -1,0 +1,324 @@
+{
+    "info": {
+        "_postman_id": "b1e2d3c4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+        "name": "Silver Walks Module",
+        "description": "Collection for the Silver Walks Module endpoints including Walk Sessions, Today's Walk, Weekly Reports, and Statistics.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Walk Sessions",
+            "item": [
+                {
+                    "name": "Get All Walk Sessions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks?status=pending&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "pending",
+                                    "description": "Filter by status (pending, accepted, in-progress, completed, cancelled, rejected)"
+                                },
+                                {
+                                    "key": "startDate",
+                                    "value": "2024-01-01",
+                                    "description": "Filter by start date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2024-12-31",
+                                    "description": "Filter by end date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10",
+                                    "description": "Limit the number of results"
+                                }
+                            ]
+                        },
+                        "description": "Fetches all walk sessions for the authenticated elderly user with optional filters."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Today's Walk",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks/today",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks",
+                                "today"
+                            ]
+                        },
+                        "description": "Fetches the scheduled walk session for today for the authenticated elderly user."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Weekly Walks",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks/weekly?weekStart=2024-01-22",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks",
+                                "weekly"
+                            ],
+                            "query": [
+                                {
+                                    "key": "weekStart",
+                                    "value": "2024-01-22",
+                                    "description": "Start date of the week (YYYY-MM-DD). Defaults to current Monday if not provided."
+                                }
+                            ]
+                        },
+                        "description": "Fetches walk sessions and a summary for the specified week."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Walk Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks/stats?period=month",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks",
+                                "stats"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "month",
+                                    "description": "Statistics period (month, year, all-time). Defaults to all-time."
+                                }
+                            ]
+                        },
+                        "description": "Fetches comprehensive walk statistics for the authenticated elderly user."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Walk Session",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"scheduledDate\": \"2024-01-24\",\n    \"scheduledTime\": \"09:00\",\n    \"duration\": 30,\n    \"matchingMode\": \"auto\",\n    \"nurseId\": null\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks"
+                            ]
+                        },
+                        "description": "Creates a new walk session. matchingMode can be 'auto' or 'manual'."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Match Nurse",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"scheduledDate\": \"2024-01-24\",\n    \"scheduledTime\": \"09:00\",\n    \"duration\": 30\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks/match",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks",
+                                "match"
+                            ]
+                        },
+                        "description": "Finds a matching nurse for the given time slot."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Available Time Slots",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/walks/slots?date=2024-01-24",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "walks",
+                                "slots"
+                            ],
+                            "query": [
+                                {
+                                    "key": "date",
+                                    "value": "2024-01-24"
+                                }
+                            ]
+                        },
+                        "description": "Fetches available time slots for a specific date."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Nurses",
+            "item": [
+                {
+                    "name": "Get Available Nurses",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/nurses?specialization=elderly-care&date=2024-01-24&time=09:00",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "nurses"
+                            ],
+                            "query": [
+                                {
+                                    "key": "specialization",
+                                    "value": "elderly-care",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "2024-01-24",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "time",
+                                    "value": "09:00",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Fetches available nurses with optional filters."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "your_access_token_here",
+            "type": "string"
+        }
+    ]
+}

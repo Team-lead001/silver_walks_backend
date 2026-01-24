@@ -2,6 +2,9 @@ import User, { UserCreationAttributes } from "../../models/User.model";
 import ElderlyProfile, { ElderlyProfileCreationAttributes } from "../../models/ElderlyProfile.model";
 import EmergencyContact, { EmergencyContactCreationAttributes } from "../../models/EmergencyContact.model";
 import HealthProfile, { HealthProfileCreationAttributes } from "../../models/HealthProfile.model";
+import NurseProfile, { NurseProfileCreationAttributes } from "../../models/NurseProfile.model";
+import NurseCertification from "../../models/NurseCertification.model";
+import NurseAvailability from "../../models/NurseAvailability.model";
 import { Transaction } from "sequelize";
 
 export class AuthRepository {
@@ -31,6 +34,27 @@ export class AuthRepository {
      */
     async createHealthProfile(data: HealthProfileCreationAttributes, t?: Transaction): Promise<HealthProfile> {
         return HealthProfile.create(data, { transaction: t });
+    }
+
+    /**
+     * Create Nurse Profile
+     */
+    async createNurseProfile(data: NurseProfileCreationAttributes, t?: Transaction): Promise<NurseProfile> {
+        return NurseProfile.create(data, { transaction: t });
+    }
+
+    /**
+     * Create Nurse Certification
+     */
+    async createNurseCertification(data: any, t?: Transaction): Promise<NurseCertification> {
+        return NurseCertification.create(data, { transaction: t });
+    }
+
+    /**
+     * Create Nurse Availability
+     */
+    async createNurseAvailability(data: any, t?: Transaction): Promise<NurseAvailability> {
+        return NurseAvailability.create(data, { transaction: t });
     }
 
     /**
