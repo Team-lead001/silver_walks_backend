@@ -17,6 +17,7 @@ import Payment from './Payment.model';
 import AdminAction from './AdminAction.model';
 import ActivityTracker from './ActivityTracker.model';
 import Otp from './Otp.model';
+import NurseCertification from './NurseCertification.model';
 
 // Define associations
 
@@ -148,6 +149,18 @@ NurseProfile.hasMany(WithdrawalRequest, {
   as: 'withdrawalRequests',
 });
 
+NurseProfile.hasMany(NurseCertification, {
+  foreignKey: 'nurse_profile_id',
+  as: 'certifications_list',
+  onDelete: 'CASCADE',
+});
+
+// NurseCertification associations
+NurseCertification.belongsTo(NurseProfile, {
+  foreignKey: 'nurse_profile_id',
+  as: 'nurseProfile',
+});
+
 // HealthProfile associations
 HealthProfile.belongsTo(ElderlyProfile, {
   foreignKey: 'elderly_id',
@@ -242,6 +255,7 @@ Notification.belongsTo(User, {
 EmergencyAlert.belongsTo(WalkSession, {
   foreignKey: 'walk_session_id',
   as: 'walkSession',
+  onDelete: 'SET NULL',
 });
 
 EmergencyAlert.belongsTo(ElderlyProfile, {
@@ -344,7 +358,8 @@ export {
   ActivityLog,
   ActivityTracker,
   EmergencyAlert,
-  Otp
+  Otp,
+  NurseCertification
 };
 
 export default {
@@ -366,4 +381,5 @@ export default {
   Payment,
   ActivityTracker,
   Otp,
+  NurseCertification,
 };

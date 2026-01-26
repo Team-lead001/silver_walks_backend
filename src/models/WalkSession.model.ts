@@ -56,6 +56,10 @@ class WalkSession extends Model<WalkSessionAttributes, WalkSessionCreationAttrib
   public cancellation_reason?: string;
   public created_at!: Date;
   public updated_at!: Date;
+
+  // Associations
+  public readonly elderlyProfile?: ElderlyProfile;
+  public readonly nurseProfile?: NurseProfile;
 }
 
 WalkSession.init(

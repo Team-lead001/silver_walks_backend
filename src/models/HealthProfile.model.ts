@@ -56,12 +56,12 @@ HealthProfile.init(
       allowNull: false,
     },
     medical_conditions: {
-      type: DataTypes.JSONB,
+      type: DataTypes.ARRAY(DataTypes.JSONB),
       allowNull: false,
       defaultValue: [],
     },
     medications: {
-      type: DataTypes.JSONB,
+      type: DataTypes.ARRAY(DataTypes.JSONB),
       allowNull: false,
       defaultValue: [],
     },

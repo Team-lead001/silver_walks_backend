@@ -7,11 +7,19 @@ export enum UserRole {
   NURSE = 'nurse'
 }
 
+export enum UserStatus {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended'
+}
+
 interface UserAttributes {
   id: string;
   email: string;
   password_hash: string;
   role: UserRole;
+  status: UserStatus;
   created_at: Date;
   updated_at: Date;
   last_login_at?: Date;
@@ -27,6 +35,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public email!: string;
   public password_hash!: string;
   public role!: UserRole;
+  public status!: UserStatus;
   public created_at!: Date;
   public updated_at!: Date;
   public last_login_at?: Date;
@@ -57,6 +66,11 @@ User.init(
     role: {
       type: DataTypes.ENUM(...Object.values(UserRole)),
       allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM(...Object.values(UserStatus)),
+      allowNull: false,
+      defaultValue: UserStatus.ACTIVE,
     },
     created_at: {
       type: DataTypes.DATE,
