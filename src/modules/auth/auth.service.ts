@@ -267,8 +267,11 @@ export const registerElderlyUser = async (
       if (!existingUser.is_email_verified) {
         logger.info("User exists but is unverified. Resending OTP.", { email: existingUser.email });
 
-        // Trigger new OTP
-        await otpService.createAndSendOtp(existingUser.email, OtpPurpose.EMAIL_VERIFICATION);
+        // Trigger new OTP (non-blocking)
+        otpService.createAndSendOtp(existingUser.email, OtpPurpose.EMAIL_VERIFICATION)
+          .catch((error: Error) => {
+            logger.error('Failed to resend verification OTP during retry', error as Error);
+          });
 
         // Fetch elderly profile to return
         const elderlyProfile = await authRepository.findElderlyProfileByUserId(existingUser.id);

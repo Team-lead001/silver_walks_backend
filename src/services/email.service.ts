@@ -307,11 +307,33 @@ export const emailService = EmailServiceFactory.getInstance();
  */
 
 /**
- * Send a single email
+ * Send a single email with a safety timeout
  */
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
   const service = EmailServiceFactory.getInstance();
-  await service.sendEmail(options);
+  
+  // Create a timeout promise
+  const timeoutMs = 10000; // 10 seconds
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new AppError(`Email sending timed out after ${timeoutMs/1000}s`, 500, ErrorCode.EXTERNAL_SERVICE_ERROR));
+    }, timeoutMs);
+  });
+
+  // Race the email sending against the timeout
+  try {
+    await Promise.race([
+      service.sendEmail(options),
+      timeoutPromise
+    ]);
+  } catch (error) {
+    logger.error('Email sending failed or timed out', error as Error, { 
+      to: options.to,
+      subject: options.subject
+    });
+    // Re-throw if it wasn't a timeout, or if we want the caller to know it failed
+    throw error;
+  }
 };
 
 /**
