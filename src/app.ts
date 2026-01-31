@@ -31,7 +31,24 @@ export const createApp = async (): Promise<Application> => {
   // CORS configuration
   app.use(
     cors({
-      origin: config.cors.origin,
+      origin: (origin, callback) => {
+        // If no origin (e.g., local request, postman), allow it
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = config.cors.origin;
+
+        if (allowedOrigins === '*') {
+          callback(null, true);
+        } else if (Array.isArray(allowedOrigins)) {
+          if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'));
+          }
+        } else {
+          callback(null, allowedOrigins === origin);
+        }
+      },
       credentials: config.cors.credentials,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -52,7 +69,7 @@ export const createApp = async (): Promise<Application> => {
   // Request logging
   app.use(requestLogger);
 
-  
+
 
   // API rate limiting
   app.use('/api', apiRateLimiter);
@@ -81,11 +98,11 @@ export const initializeApp = async (): Promise<void> => {
   try {
     // Connect to database
     await connectDatabase();
-    
+
     // Run database migrations (create tables if they don't exist)
     // Migrations will automatically run on startup and skip already executed ones
     await migrateDatabase();
-    
+
     logger.info('Application initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize application', error as Error);
