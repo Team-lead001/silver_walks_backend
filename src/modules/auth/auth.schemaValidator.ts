@@ -45,11 +45,11 @@ export const registerElderlySchema = Joi.object({
 
   phone: Joi.string()
     .trim()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .pattern(/^(\+?[1-9]\d{1,14}|0\d{9,14})$/)
     .required()
     .messages({
       'string.empty': 'Phone number is required',
-      'string.pattern.base': 'Invalid phone number format. Use international format (e.g., +1234567890)',
+      'string.pattern.base': 'Invalid phone number format. Use international (+1...) or local (0...) format',
       'any.required': 'Phone number is required',
     }),
 
@@ -111,11 +111,11 @@ export const registerElderlySchema = Joi.object({
 
   emergencyContactPhone: Joi.string()
     .trim()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .pattern(/^(\+?[1-9]\d{1,14}|0\d{9,14})$/)
     .required()
     .messages({
       'string.empty': 'Emergency contact phone is required',
-      'string.pattern.base': 'Invalid emergency contact phone format',
+      'string.pattern.base': 'Invalid emergency contact phone format. Use international (+1...) or local (0...) format',
       'any.required': 'Emergency contact phone is required',
     }),
 
@@ -145,6 +145,14 @@ export const registerElderlySchema = Joi.object({
     .allow('')
     .messages({
       'string.max': 'Special needs must not exceed 1000 characters',
+    }),
+
+  mobilityLevel: Joi.string()
+    .trim()
+    .optional()
+    .allow('')
+    .messages({
+      'string.empty': 'Mobility level is optional',
     }),
 });
 

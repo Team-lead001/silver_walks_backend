@@ -25,6 +25,7 @@ interface RegisterElderlyUserData {
   currentMedications?: string[];
   specialNeeds?: string;
   gender: string;
+  mobilityLevel?: string;
 }
 
 interface RegisterNurseData {
@@ -100,6 +101,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
     currentMedications,
     specialNeeds,
     gender,
+    mobilityLevel,
   } = data;
 
   // Generate temporary password and hash it
@@ -167,7 +169,7 @@ const createElderlyRecords = async (data: RegisterElderlyUserData, t: any) => {
       allergies: [],
       dietary_restrictions: [],
       emergency_notes: specialNeeds || "",
-      mobility_level: MobilityLevel.INDEPENDENT,
+      mobility_level: (mobilityLevel as MobilityLevel) || MobilityLevel.INDEPENDENT,
     },
     t
   );
