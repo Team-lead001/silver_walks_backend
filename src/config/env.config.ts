@@ -9,6 +9,7 @@ interface Config {
   port: number;
   apiVersion: string;
   database: {
+    url?: string;
     host: string;
     port: number;
     name: string;
@@ -68,6 +69,7 @@ export const config: Config = {
   apiVersion: process.env.API_VERSION || 'v1',
 
   database: {
+    url: process.env.DATABASE_URL,
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432', 10),
     name: process.env.DB_NAME || 'silverwalks_db',
@@ -88,7 +90,7 @@ export const config: Config = {
   },
 
   cors: {
-    origin: process.env.CORS_ORIGIN === '*' ? '*' : process.env.CORS_ORIGIN?.split(',') || 'https://silverwalks.vercel.app'||'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN === '*' ? '*' : process.env.CORS_ORIGIN?.split(',') || 'https://silverwalks.vercel.app' || 'http://localhost:5173',
     credentials: process.env.CORS_CREDENTIALS === 'true',
   },
 
@@ -146,6 +148,22 @@ export const config: Config = {
 
 // Validate required environment variables
 const validateConfig = (): void => {
+  // If DATABASE_URL is provided, individual DB variables are not required
+  if (process.env.DATABASE_URL) {
+    const essentialVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET'];
+    const missingVars = essentialVars.filter((varName) => !process.env[varName]);
+
+    if (missingVars.length > 0) {
+      if (config.env === 'production') {
+        console.error('❌ Missing required environment variables:', missingVars.join(', '));
+        process.exit(1);
+      } else {
+        console.warn('⚠️  Missing environment variables (using defaults):', missingVars.join(', '));
+      }
+    }
+    return;
+  }
+
   const requiredEnvVars = [
     'DB_HOST',
     'DB_NAME',

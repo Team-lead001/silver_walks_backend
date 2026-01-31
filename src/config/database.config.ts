@@ -7,8 +7,35 @@ import { runMigrations } from '../migrations';
 // Support both DATABASE_URL (for Neon DB) and individual connection parameters
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-const sequelize = process.env.DATABASE_URL
-  ? new Sequelize(process.env.DATABASE_URL, {
+const sequelize = config.database.url
+  ? new Sequelize(config.database.url, {
+    dialect: 'postgres',
+    logging: config.env === 'development' ? (msg: string) => logger.debug(msg) : false,
+    pool: {
+      max: isServerless ? 2 : 10, // Reduced for serverless
+      min: 0,
+      acquire: 30000,
+      idle: isServerless ? 1000 : 10000, // Shorter idle for serverless
+    },
+    define: {
+      timestamps: true,
+      underscored: true,
+      freezeTableName: true,
+    },
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+  })
+  : new Sequelize(
+    config.database.name,
+    config.database.user,
+    config.database.password,
+    {
+      host: config.database.host,
+      port: config.database.port,
       dialect: 'postgres',
       logging: config.env === 'development' ? (msg: string) => logger.debug(msg) : false,
       pool: {
@@ -23,42 +50,15 @@ const sequelize = process.env.DATABASE_URL
         freezeTableName: true,
       },
       dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
+        ssl: config.database.ssl
+          ? {
+            require: true,
+            rejectUnauthorized: false,
+          }
+          : false,
       },
-    })
-  : new Sequelize(
-      config.database.name,
-      config.database.user,
-      config.database.password,
-      {
-        host: config.database.host,
-        port: config.database.port,
-        dialect: 'postgres',
-        logging: config.env === 'development' ? (msg: string) => logger.debug(msg) : false,
-        pool: {
-          max: isServerless ? 2 : 10, // Reduced for serverless
-          min: 0,
-          acquire: 30000,
-          idle: isServerless ? 1000 : 10000, // Shorter idle for serverless
-        },
-        define: {
-          timestamps: true,
-          underscored: true,
-          freezeTableName: true,
-        },
-        dialectOptions: {
-          ssl: config.database.ssl
-            ? {
-                require: true,
-                rejectUnauthorized: false,
-              }
-            : false,
-        },
-      }
-    );
+    }
+  );
 
 export { sequelize };
 
